@@ -45,7 +45,7 @@ export default function Hero() {
         <div className="grid items-center gap-14 lg:grid-cols-[1.1fr_1fr]">
           <div>
             <h1 className="hero__line--1 font-[420]">
-              <em className="block whitespace-nowrap italic font-[380] text-[clamp(2.1rem,4.2vw+0.9rem,4.25rem)]">
+              <em className="block whitespace-nowrap italic font-[380] text-[clamp(1.65rem,4.2vw+0.6rem,4.25rem)]">
                 Dear independent hotels,
               </em>
               <span className="mt-5 block max-w-[20ch] text-[clamp(1.8rem,3.5vw+0.8rem,3.4rem)]">

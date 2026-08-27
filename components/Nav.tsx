@@ -59,7 +59,8 @@ export default function Nav() {
               : "border-paper/30 bg-[rgba(24,32,22,0.35)] text-paper hover:bg-[rgba(24,32,22,0.6)]"
           }`}
         >
-          Apply to the Flagship Program
+          <span className="md:hidden">Apply</span>
+          <span className="hidden md:inline">Apply to the Flagship Program</span>
         </a>
       </Container>
     </header>

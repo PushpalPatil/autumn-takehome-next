@@ -115,7 +115,7 @@ export default function Services() {
         <Eyebrow>Beyond search</Eyebrow>
 
         <div
-          className="svc-stage mx-auto mt-10 flex max-w-[56rem] flex-wrap justify-center gap-4 md:relative md:block md:h-[36rem]"
+          className="svc-stage mx-auto mt-10 flex max-w-[56rem] flex-col gap-7 md:relative md:mt-14 md:block md:h-[36rem]"
           ref={stageRef}
         >
           {/* radiating lines, center → each bubble (desktop ring only) */}
