@@ -25,9 +25,12 @@ export default function HowItWorks() {
         <Eyebrow>How it works</Eyebrow>
         <h2 className="max-w-[22ch] text-h2">You run the inn. <br/>We bring the guests.</h2>
 
-        <ol className="mt-14 grid list-none grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-10 p-0">
+        <ol className="mt-14 grid list-none grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-6 p-0">
           {steps.map((s, i) => (
-            <li key={s.title}>
+            <li
+              className="rounded-2xl border border-green bg-paper-deep p-7 md:p-8"
+              key={s.title}
+            >
               <span className="mb-4 block font-display text-[2.5rem] leading-none text-accent">
                 {i + 1}
               </span>

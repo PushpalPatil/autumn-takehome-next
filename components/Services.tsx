@@ -61,6 +61,32 @@ const services = [
   },
 ];
 
+// thin stroke icons, one per service (rendered by index)
+const icons = [
+  /* email: envelope */
+  <path key="i0" d="M3.5 6.5h17v11h-17zM4 7.5l8 5.5 8-5.5" />,
+  /* social: heart */
+  <path
+    key="i1"
+    d="M12 19.5S4.8 15 3.4 10.6a4.4 4.4 0 018.1-3.2l.5.8.5-.8a4.4 4.4 0 018.1 3.2C19.2 15 12 19.5 12 19.5z"
+  />,
+  /* website/SEO/AI: globe */
+  <g key="i2">
+    <circle cx="12" cy="12" r="8.25" />
+    <path d="M3.75 12h16.5M12 3.75c3.2 3.2 3.2 13.3 0 16.5M12 3.75c-3.2 3.2-3.2 13.3 0 16.5" />
+  </g>,
+  /* dynamic pricing: tag */
+  <g key="i3">
+    <path d="M4 4h7.6l8.4 8.4a1.6 1.6 0 010 2.3l-5.3 5.3a1.6 1.6 0 01-2.3 0L4 11.6z" />
+    <circle cx="8.3" cy="8.3" r="1.1" />
+  </g>,
+  /* reputation: star */
+  <path
+    key="i4"
+    d="M12 4l2.35 4.9 5.4.7-3.95 3.75.95 5.35L12 16.1l-4.75 2.6.95-5.35L4.25 9.6l5.4-.7z"
+  />,
+];
+
 export default function Services() {
   const stageRef = useRef<HTMLDivElement>(null);
   const tourTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -171,7 +197,19 @@ export default function Services() {
                 setActive(i);
               }}
             >
-              <span className="svc-bubble__inner grid size-full place-items-center rounded-full bg-green p-6 text-center font-display text-[1.375rem] leading-snug text-paper shadow-[0_14px_34px_rgba(34,28,21,0.22)] transition-[scale,box-shadow] duration-300 group-hover:scale-[1.06] group-hover:shadow-[0_20px_44px_rgba(34,28,21,0.3)]">
+              <span className="svc-bubble__inner flex size-full flex-col items-center justify-center gap-1.5 rounded-full bg-green p-6 text-center font-display text-[1.375rem] leading-snug text-paper shadow-[0_14px_34px_rgba(34,28,21,0.22)] transition-[scale,box-shadow] duration-300 group-hover:scale-[1.06] group-hover:shadow-[0_20px_44px_rgba(34,28,21,0.3)]">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="hidden size-6 shrink-0 text-paper/85 md:block"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  {icons[i]}
+                </svg>
                 {s.name}
               </span>
 
