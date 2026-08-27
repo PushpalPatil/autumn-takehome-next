@@ -1,0 +1,632 @@
+@import "tailwindcss";
+
+/* ==================================================================
+   Autumn homepage — Tailwind-first.
+   Components style themselves with utilities; this file holds only:
+   1. design tokens (colors, type scale, rhythm) exposed as Tailwind
+      utilities via @theme (bg-paper, text-accent, text-h2, py-section…)
+   2. base element typography
+   3. the hero fog machinery — scene/scrim/fog layers, reveal
+      choreography, and keyframes — which is genuinely CSS-shaped
+   ================================================================== */
+
+/* ------------------------------ tokens ----------------------------- */
+:root {
+  --paper: #faf6ef;
+  --paper-deep: #f3ecdf; /* alternate section band */
+  --ink: #221c15;
+  --muted: #6e6357;
+  --accent: #b4552d; /* burnt sienna */
+  --green: #2e4b3a; /* deep forest, supporting */
+  --line: #e3dacb; /* hairline rules */
+
+  /* fog: fractal noise baked into static SVGs — rendered once, only
+     transforms animate. color-interpolation-filters='sRGB' is load-bearing:
+     without it Chrome (linearRGB) and Safari diverge wildly. */
+  --fog-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='700'%3E%3Cfilter id='f' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0035 0.007' numOctaves='4' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.99 0 0 0 0 0.97 0 0 0 0 0.93 1.1 0 0 0 -0.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  --fog-texture-big: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='800'%3E%3Cfilter id='f' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0014 0.0032' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.98 0 0 0 0 0.94 1.25 0 0 0 -0.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+/* colors reference the :root vars — one source of truth */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-green: var(--green);
+  --color-line: var(--line);
+}
+
+@theme {
+  /* fonts: next/font injects --font-fraunces / --font-instrument on <html> */
+  --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-instrument), "Helvetica Neue", Arial, sans-serif;
+
+  /* type scale → text-deck, text-h2, text-display utilities */
+  --text-deck: clamp(1.25rem, 1.5vw + 0.75rem, 1.5rem);
+  --text-h2: clamp(2rem, 3.5vw + 1rem, 3.25rem);
+  --text-display: clamp(3rem, 7vw + 1rem, 6.5rem);
+
+  /* rhythm → py-section, px-gutter, max-w-page utilities */
+  --spacing-section: clamp(6rem, 9vw, 10rem);
+  --spacing-gutter: clamp(1.25rem, 3vw, 2rem);
+  --container-page: 88rem;
+}
+
+/* ------------------------------- base ------------------------------ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1.125rem; /* 18px floor — readability is scored */
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 480;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  p {
+    max-width: 68ch;
+    text-wrap: pretty;
+  }
+}
+
+/* --------------------------- hero machinery -------------------------
+   MOTION ELEMENT #1 — the fog reveal. The section carries `.hero`; the
+   Hero component arms `.is-ready` after mount. Without JS, or with
+   prefers-reduced-motion, the scene renders static with text visible.
+   Layout/typography of the hero content lives in the component as
+   utilities; only the scene stack and choreography live here. */
+.hero__scene {
+  position: absolute;
+  inset: 0;
+  /* TEMP until hero-scene.jpg lands: cream dawn sky over green-gold hills.
+     Ends on deep green; the Partners section below continues that green and
+     carries it down into the beige (see .grad-hero-exit). */
+  background:
+    radial-gradient(120% 70% at 70% 10%, #f4e8cf 0%, transparent 60%),
+    radial-gradient(90% 55% at 20% 105%, #24382c 0%, transparent 70%),
+    radial-gradient(110% 60% at 85% 100%, #3a5140 0%, transparent 65%),
+    linear-gradient(to bottom, #e8d9b8 0%, #b9a985 45%, #55684f 75%, #2e4b3a 100%);
+}
+
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(20, 16, 11, 0.45) 0%, transparent 20%),
+    linear-gradient(to top, rgba(20, 16, 11, 0.62) 0%, transparent 55%),
+    linear-gradient(to right, rgba(20, 16, 11, 0.35) 0%, transparent 50%);
+}
+
+/* sits ABOVE the fog layers: converges the hero's bottom edge to one flat
+   color so the next section can continue it seamlessly — scrims, hill
+   radials, and drifting fog all vary the edge without this */
+.hero__floor {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 18%;
+  background: linear-gradient(to top, #1e261d 0%, rgba(30, 38, 29, 0) 100%);
+  pointer-events: none;
+}
+
+.hero__fog {
+  position: absolute;
+  top: -12%;
+  bottom: -12%;
+  left: -35%;
+  width: 170%;
+  /* fine grain over large billows — two noise scales per bank */
+  background-image: var(--fog-texture), var(--fog-texture-big);
+  background-size: 1200px 700px, 1700px 950px;
+  background-position: 0 0, 30% 60%;
+  filter: blur(16px);
+  pointer-events: none;
+  /* elliptical falloff: soft on every edge so the bank never reads as a
+     rectangle sliding across the frame (-webkit- for older Safari) */
+  -webkit-mask-image: radial-gradient(
+    ellipse 55% 48% at 50% 50%,
+    black 35%,
+    rgba(0, 0, 0, 0.55) 60%,
+    transparent 78%
+  );
+  mask-image: radial-gradient(
+    ellipse 55% 48% at 50% 50%,
+    black 35%,
+    rgba(0, 0, 0, 0.55) 60%,
+    transparent 78%
+  );
+}
+
+/* resting state (also the no-JS / reduced-motion state): quiet ambient fog */
+.hero__fog--sweep-1,
+.hero__fog--sweep-2 {
+  opacity: 0;
+}
+.hero__fog--sweep-2 {
+  /* offset the second bank so the two don't overlap into one shape */
+  top: -30%;
+  background-position: 55% 20%, 70% 10%;
+}
+.hero__fog--ambient-1 {
+  opacity: 0.26;
+  filter: blur(20px);
+}
+.hero__fog--ambient-2 {
+  opacity: 0.16;
+  filter: blur(28px);
+  background-size: 1600px 900px, 2100px 1200px;
+  background-position: 60% 30%, 10% 80%;
+}
+
+/* choreography: only when JS armed it AND motion is welcome */
+@media (prefers-reduced-motion: no-preference) {
+  .hero.is-ready .hero__fog--sweep-1 {
+    animation: fog-sweep 5s cubic-bezier(0.45, 0, 0.25, 1) forwards;
+    opacity: 1;
+  }
+  .hero.is-ready .hero__fog--sweep-2 {
+    animation: fog-sweep 6.5s cubic-bezier(0.45, 0, 0.25, 1) forwards;
+    opacity: 0.8;
+    filter: blur(24px);
+  }
+  .hero.is-ready .hero__fog--ambient-1 {
+    animation: fog-drift 48s ease-in-out infinite;
+  }
+  .hero.is-ready .hero__fog--ambient-2 {
+    animation: fog-drift 64s ease-in-out infinite reverse;
+  }
+
+  .hero.is-ready .hero__line--1 {
+    animation: rise-in 1.3s cubic-bezier(0.33, 1, 0.68, 1) 1.2s both;
+  }
+  .hero.is-ready .hero__line--2 {
+    animation: rise-in 1.3s cubic-bezier(0.33, 1, 0.68, 1) 2s both;
+  }
+  .hero.is-ready .hero__ctas {
+    animation: rise-in 1.3s cubic-bezier(0.33, 1, 0.68, 1) 2.8s both;
+  }
+  .hero.is-ready .hero__cue {
+    animation: rise-in 1.3s ease 3.4s both;
+  }
+  /* the demo surfaces as the fog finishes, just before its first cycle */
+  .hero.is-ready .hero__demo {
+    animation: rise-in 1.2s cubic-bezier(0.33, 1, 0.68, 1) 3.1s both;
+  }
+}
+
+/* the bank exits stage right entirely (115% of a 170%-wide layer), so no
+   opacity fade is needed — it simply rolls out of frame */
+@keyframes fog-sweep {
+  from {
+    transform: translateX(-35%);
+  }
+  to {
+    transform: translateX(115%);
+  }
+}
+
+@keyframes fog-drift {
+  0%,
+  100% {
+    transform: translateX(-5%);
+  }
+  50% {
+    transform: translateX(5%);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* --------------- partner cards: dealt-in stack on scroll ------------------
+   Armed by Partners.tsx adding `.is-inview` to the row. Each card slides in
+   from the right and settles onto the stack, left to right. Static state
+   (no JS / reduced motion): cards already in place. */
+@media (prefers-reduced-motion: no-preference) {
+  /* armed at hydration (below the fold): cards wait unseen until the deal */
+  .partners-wrap.is-armed .partner {
+    opacity: 0;
+  }
+  .partners-wrap.is-inview .partner {
+    animation: card-deal 0.7s cubic-bezier(0.22, 1, 0.36, 1)
+      calc(0.1s + var(--i) * 0.12s) both;
+  }
+  /* scroll-hint arrows appear once the deal has finished */
+  .partners-wrap.is-armed .partners-nav {
+    opacity: 0;
+  }
+  .partners-wrap.is-inview .partners-nav {
+    animation: rise-in 0.8s ease 1.9s both;
+  }
+}
+
+@keyframes card-deal {
+  from {
+    opacity: 0;
+    transform: translateX(min(55vw, 36rem));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* --------------------- the page's single color journey --------------------
+   Hero green → green carried through the top half of Partners → Partners
+   beige (--paper-deep) held to roughly two-thirds of the page → eased into
+   the lighter beige (--paper) → a long multi-stop dusk into the footer ink.
+   No alternating bands. */
+
+/* Partners: the hero's own dark tone (its scrimmed bottom color), held flat
+   through the whole section — no new hues introduced */
+.grad-hero-exit {
+  background: #1e261d;
+}
+
+/* Guest stories: the hero tone holds through the first fifth, then a long
+   many-stop dissolve carries it from dark through olive and tan — ending at
+   #ddd3ba, which the SEM section below picks up exactly and finishes into
+   the beige. Stops are dense so the ramp stays smooth even in the sRGB
+   fallback; the OKLab declaration wins where supported. */
+.grad-green-exit {
+  background: linear-gradient(
+    to bottom,
+    #1e261d 0%,
+    #1e261d 22%,
+    #2b3428 34%,
+    #3f4a38 46%,
+    #5d654c 57%,
+    #7d775e 67%,
+    #9c9377 76%,
+    #b8ae91 85%,
+    #cfc5a9 93%,
+    #ddd3ba 100%
+  );
+  background: linear-gradient(
+    to bottom in oklab,
+    #1e261d 0%,
+    #1e261d 22%,
+    #3f4a38 46%,
+    #7d775e 67%,
+    #b8ae91 85%,
+    #ddd3ba 100%
+  );
+}
+
+/* SEM: receives the dissolve's tail at exactly #ddd3ba and settles into the
+   beige within its top padding, before the heading begins */
+.grad-beige-arrive {
+  background: linear-gradient(
+    to bottom,
+    #ddd3ba 0%,
+    #e7ddc7 10%,
+    #eee6d4 18%,
+    var(--paper-deep) 26%,
+    var(--paper-deep) 100%
+  );
+  background: linear-gradient(
+    to bottom in oklab,
+    #ddd3ba 0%,
+    #e7ddc7 10%,
+    #eee6d4 18%,
+    var(--paper-deep) 26%,
+    var(--paper-deep) 100%
+  );
+}
+
+/* How it works: eases the held beige into the lighter paper */
+.grad-deep-to-light {
+  background: linear-gradient(
+    to bottom,
+    var(--paper-deep) 0%,
+    var(--paper-deep) 25%,
+    var(--paper) 75%,
+    var(--paper) 100%
+  );
+}
+
+/* Flagship: a long dusk — starts earlier, steps through warm browns so the
+   descent into ink never bands */
+.fade-to-footer {
+  background: linear-gradient(
+    to bottom,
+    var(--paper) 0%,
+    var(--paper) 48%,
+    #ded3bc 58%,
+    #b3a68c 66%,
+    #857763 74%,
+    #57493a 82%,
+    #362c21 91%,
+    var(--ink) 100%
+  );
+}
+
+/* -------------- SEM explainer (motion element #2) choreography ------------
+   The component renders the finished tableau by default; data-phase drives
+   the replay. Beats: typing → results → rise → booked → coda.
+   The inn's DOM position is the top slot; earlier phases push it to the
+   bottom slot and lift the others, so "rise" is just releasing transforms. */
+.sem-demo__result {
+  transition: transform 0.6s cubic-bezier(0.33, 1, 0.68, 1),
+    border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.4s ease;
+}
+
+/* one row = card height (4.5rem) + gap (0.75rem) */
+.sem-demo[data-phase="typing"] .sem-demo__result--inn,
+.sem-demo[data-phase="results"] .sem-demo__result--inn {
+  transform: translateY(10.5rem);
+}
+.sem-demo[data-phase="typing"] .sem-demo__result:not(.sem-demo__result--inn),
+.sem-demo[data-phase="results"] .sem-demo__result:not(.sem-demo__result--inn) {
+  transform: translateY(-5.25rem);
+}
+
+/* the inn's highlight arrives as it takes the top slot */
+.sem-demo[data-phase="rise"] .sem-demo__result--inn,
+.sem-demo[data-phase="booked"] .sem-demo__result--inn,
+.sem-demo[data-phase="coda"] .sem-demo__result--inn {
+  border-color: var(--green);
+  box-shadow: 0 8px 24px rgba(46, 75, 58, 0.18);
+}
+.sem-demo__badge {
+  transition: opacity 0.4s ease;
+}
+.sem-demo[data-phase="typing"] .sem-demo__badge,
+.sem-demo[data-phase="results"] .sem-demo__badge {
+  opacity: 0;
+}
+
+/* results hidden while the query types */
+.sem-demo__results {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.sem-demo[data-phase="typing"] .sem-demo__results {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+
+/* confirmation slides up on "booked"; its report note waits for "coda" */
+.sem-demo__confirm {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.sem-demo[data-phase="typing"] .sem-demo__confirm,
+.sem-demo[data-phase="results"] .sem-demo__confirm,
+.sem-demo[data-phase="rise"] .sem-demo__confirm {
+  opacity: 0;
+  transform: translateY(0.75rem);
+}
+.sem-demo__coda {
+  transition: opacity 0.5s ease;
+}
+.sem-demo:not([data-phase="coda"]) .sem-demo__coda {
+  opacity: 0;
+}
+
+/* caret blinks only while typing; invisible in the finished tableau */
+.sem-demo__caret {
+  opacity: 0;
+}
+.sem-demo[data-phase="typing"] .sem-demo__caret {
+  animation: caret-blink 0.9s steps(1) infinite;
+}
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* --------- SEM benefit rows: arrows draw toward the bodies ---------------
+   Armed by Sem.tsx (`is-armed` at hydration, `is-inview` on scroll). Static
+   state (no JS / reduced motion): arrows drawn, bodies visible. */
+/* NOTE: no non-scaling-stroke here — it switches dash math to screen pixels
+   and breaks the pathLength-normalized draw-in */
+.sem-row__arrow path {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sem-rows.is-armed .sem-row__shaft,
+  .sem-rows.is-armed .sem-row__head {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+  }
+  .sem-rows.is-armed .sem-row__body {
+    opacity: 0;
+  }
+  .sem-rows.is-inview .sem-row__shaft {
+    animation: draw-line 0.5s cubic-bezier(0.33, 1, 0.68, 1)
+      calc(0.15s + var(--i) * 0.22s) forwards;
+  }
+  .sem-rows.is-inview .sem-row__head {
+    animation: draw-line 0.25s ease-out calc(0.55s + var(--i) * 0.22s) forwards;
+  }
+  .sem-rows.is-inview .sem-row__body {
+    animation: rise-in 0.7s cubic-bezier(0.33, 1, 0.68, 1)
+      calc(0.6s + var(--i) * 0.22s) both;
+  }
+}
+
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ------------- services: green bubble cluster ---------------------------
+   Armed by Services.tsx. Bubbles pop in staggered on scroll, then bob gently
+   on offset loops. Static (no JS / reduced motion): settled cluster. */
+.svc-bubble {
+  width: var(--size);
+  height: var(--size);
+}
+@media (min-width: 48rem) {
+  .svc-bubble {
+    left: var(--x);
+    top: var(--y);
+  }
+}
+
+/* radiating lines from the center headline to each bubble — thin, light,
+   drawn center-outward on scroll-in */
+.svc-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.svc-lines line {
+  stroke: rgba(110, 99, 87, 0.4);
+  stroke-width: 1.25;
+}
+/* soft paper halo so the lines emerge from around the headline, not through it */
+@media (min-width: 48rem) {
+  .svc-center {
+    padding: 2.5rem 1.5rem;
+    background: radial-gradient(closest-side, var(--paper) 62%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .svc-stage.is-armed .svc-bubble {
+    opacity: 0;
+    scale: 0.6;
+  }
+  .svc-stage.is-armed .svc-center {
+    opacity: 0;
+  }
+  .svc-stage.is-armed .svc-lines line {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  .svc-stage.is-inview .svc-center {
+    animation: rise-in 0.8s cubic-bezier(0.33, 1, 0.68, 1) 0.1s both;
+  }
+  .svc-stage.is-inview .svc-lines line {
+    animation: line-out 0.55s cubic-bezier(0.33, 1, 0.68, 1)
+      calc(0.35s + var(--i) * 0.12s) forwards;
+  }
+  .svc-stage.is-inview .svc-bubble {
+    animation: bubble-in 0.7s cubic-bezier(0.34, 1.4, 0.64, 1)
+      calc(0.55s + var(--i) * 0.12s) both;
+  }
+  /* ambient bob on the inner face — separate element so hover-scale and the
+     entrance animation never fight it for the same property */
+  .svc-stage.is-inview .svc-bubble__inner {
+    animation: svc-bob 9s ease-in-out calc(1.4s + var(--i) * 0.8s) infinite
+      alternate;
+  }
+}
+
+@keyframes line-out {
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes svc-bob {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -7px;
+  }
+}
+
+/* the peek tip: hidden until its bubble is hovered/focused/tapped, then
+   fades in beside it (below it on small screens) */
+.svc-tip {
+  position: absolute;
+  width: min(16rem, 80vw);
+  opacity: 0;
+  translate: 0 4px;
+  pointer-events: none;
+  transition: opacity 0.25s ease, translate 0.25s ease;
+  /* small screens: centered under the bubble */
+  top: calc(100% + 0.6rem);
+  left: 50%;
+  margin-left: min(-8rem, -40vw);
+}
+.svc-bubble:hover .svc-tip,
+.svc-bubble:focus-visible .svc-tip,
+.svc-bubble.is-active .svc-tip {
+  opacity: 1;
+  translate: 0 0;
+}
+@media (min-width: 48rem) {
+  .svc-tip {
+    top: 50%;
+    translate: 0 -50%;
+    margin-left: 0;
+  }
+  .svc-bubble:hover .svc-tip,
+  .svc-bubble:focus-visible .svc-tip,
+  .svc-bubble.is-active .svc-tip {
+    translate: 0 -50%;
+  }
+  .svc-bubble[data-side="right"] .svc-tip {
+    left: calc(100% + 0.75rem);
+  }
+  .svc-bubble[data-side="left"] .svc-tip {
+    left: auto;
+    right: calc(100% + 0.75rem);
+  }
+}
+
+/* respect reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
